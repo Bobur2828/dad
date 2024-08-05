@@ -142,7 +142,7 @@ class AvailableTimes(APIView):
         # Booked dates from database (only dates with times)
         booked_dates = Bookings.objects.values_list('date', flat=True)
         booked_dates = [datetime.combine(date.date(), date.time()).replace(tzinfo=None) for date in booked_dates]
-        print("Booked dates:", booked_dates)  # Debug print
+        # print("Booked dates:", booked_dates)  # Debug print
 
         # Function to get available times for a given date
         def get_available_times(date):
@@ -191,7 +191,7 @@ class AvailableTimes(APIView):
 
     def get_all_possible_dates(self, start_date):
         start_time = time(8, 0)  # 08:00
-        end_time = time(15, 0)   # 15:00
+        end_time = time(14, 30)   # 15:00
         interval = timedelta(minutes=30)
         times = {}
 
