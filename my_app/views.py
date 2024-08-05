@@ -287,13 +287,16 @@ class CreateBooking(APIView):
         draw_left_aligned_text(draw, title_text, 500, title_font, image_width)
 
         # Format date and time
-        formatted_date = format_date_uzbek(data['date'])
+       
         formatted_time = data['date'].strftime('%H:%M')
         uzbekistan_tz = pytz.timezone('Asia/Tashkent')
 
 # Hozirgi vaqtni O'zbekiston vaqti bilan olish
-        booking_time = datetime.now(uzbekistan_tz).strftime('%d %B %Y, %H:%M')
+        formatted_date = format_date_uzbek(data['date'])
+        booking_time = datetime.now(uzbekistan_tz)
+        booking_time1 = datetime.now(uzbekistan_tz).strftime('%H:%M')
 
+        formatted_booking_time = format_date_uzbek(booking_time)
         # Define text lines
         text_lines = [
             f"\t   Hurmatli {data['name']},\nSiz {formatted_date} kuni soat {formatted_time} ga",
@@ -303,7 +306,7 @@ class CreateBooking(APIView):
 
            
              f"Ro'yxatga olish vaqti:\n "
-             f"\n\n{booking_time}"
+             f"\n\n{formatted_booking_time}  {booking_time1}"
 
             f"\n\nDoktor Azizjon Davlatovich\n\n\n\n"
 
