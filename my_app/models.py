@@ -129,3 +129,15 @@ class Socials(models.Model):
     class Meta:
         verbose_name = "Ijtimoiy tarmoq"
         verbose_name_plural = "Ijtimoiy tarmoqlar"
+
+
+class Bookings(models.Model):
+    name = models.CharField(max_length=200, verbose_name="Ism")
+    phone = models.CharField(max_length=200, verbose_name="Telefon")
+    date = models.DateTimeField(verbose_name="Sana")
+    
+    def __str__(self):
+        return f"{self.name} - {self.date}"
+    
+
+    

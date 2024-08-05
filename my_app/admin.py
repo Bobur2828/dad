@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Header, About, Education, Experience, Certification, Category, Blog, Video, Comment, Contact, Socials
+from .models import Header, About, Education, Experience, Certification, Category, Blog, Video, Comment, Contact, Socials,Bookings
 
 @admin.register(Header)
 class HeaderAdmin(admin.ModelAdmin):
@@ -56,3 +56,7 @@ class ContactAdmin(admin.ModelAdmin):
 class SocialsAdmin(admin.ModelAdmin):
     list_display = ('name', 'icon', 'link')
     search_fields = ('name', 'link')
+
+@admin.register(Bookings)
+class BookingsAdmin(admin.ModelAdmin):
+    list_display = ('name', 'phone', 'date')

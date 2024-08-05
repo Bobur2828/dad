@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import (Header, About, Education, Experience, Certification, Category, Blog, Video, Comment, Contact, Socials)
+from .models import (Header, About, Education, Experience, Certification, Category, Blog, Video, Comment, Contact, Socials,Bookings)
 
 class HeaderSerializer(serializers.ModelSerializer):
     class Meta:
@@ -55,3 +55,9 @@ class SocialsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Socials
         fields = ['id', 'name', 'icon', 'link']
+
+
+class BookingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Bookings
+        fields = '__all__'
