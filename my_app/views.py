@@ -1,5 +1,4 @@
 from django.shortcuts import render
-
 from django.shortcuts import render, get_object_or_404
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -10,7 +9,13 @@ from .serializers import (HeaderSerializer, AboutSerializer, EducationSerializer
 import requests
 from rest_framework import viewsets
 from rest_framework import status
-
+from django.utils import timezone
+from PIL import Image, ImageDraw, ImageFont
+from django.core.files.storage import FileSystemStorage
+from config import settings
+import os
+from io import BytesIO
+import pytz
 
 
 class HeaderView(APIView):
@@ -113,8 +118,13 @@ class AvailableTimes(APIView):
     def get(self, request):
         # `date` parametrini olish
         date_param = request.GET.get('date')
-        today = timezone.now().date()
-        now = timezone.now().time()
+        uzbekistan_tz = pytz.timezone('Asia/Tashkent')
+
+# Hozirgi vaqtni O'zbekiston vaqti bilan olish
+        booking_time = datetime.now(uzbekistan_tz).strftime('%d %B %Y, %H:%M')
+
+        today = datetime.now(uzbekistan_tz).date()  # Lokal vaqtni olish
+        now = datetime.now(uzbekistan_tz).time()    # Lokal vaqtni olish
 
         # Sanani o'qish yoki bugungi sanani olish
         if date_param:
@@ -131,7 +141,8 @@ class AvailableTimes(APIView):
 
         # Booked dates from database (only dates with times)
         booked_dates = Bookings.objects.values_list('date', flat=True)
-        booked_dates = [datetime.combine(date.date(), date.time()) for date in booked_dates]
+        booked_dates = [datetime.combine(date.date(), date.time()).replace(tzinfo=None) for date in booked_dates]
+        print("Booked dates:", booked_dates)  # Debug print
 
         # Function to get available times for a given date
         def get_available_times(date):
@@ -140,8 +151,12 @@ class AvailableTimes(APIView):
                 # For today, filter out times before the current time
                 times = [t for t in times if t >= now]
             # Exclude booked times
-            times = [t.strftime("%H:%M") for t in times if datetime.combine(date, t) not in booked_dates]
-            return times
+            available_times = []
+            for t in times:
+                combined_datetime = datetime.combine(date, t).replace(tzinfo=None)
+                if combined_datetime not in booked_dates:
+                    available_times.append(t.strftime("%H:%M"))
+            return available_times
 
         # Function to check if a date is a Sunday
         def is_sunday(date):
@@ -162,8 +177,9 @@ class AvailableTimes(APIView):
             data["message"] = "Dam olish kuni"
 
         # Add message if no times are available
+        if not available_times:
+            data["message"] = "Bu sana uchun mavjud vaqtlar mavjud emas"
 
-        
         # Add success field
         response_data = {
             "success": True,
@@ -189,28 +205,20 @@ class AvailableTimes(APIView):
                 current_time = (datetime.combine(current_date, current_time) + interval).time()
 
         return times
-from django.utils import timezone
-
-from django.utils import timezone
-
-
-from PIL import Image, ImageDraw, ImageFont
-from django.core.files.storage import FileSystemStorage
-from config import settings
-import os
-from io import BytesIO
 class CreateBooking(APIView):
     def post(self, request):
         serializer = BookingSerializer(data=request.data)
         if serializer.is_valid():
             date_str = request.data.get('date')
             try:
-                date = timezone.make_aware(datetime.strptime(date_str, '%Y-%m-%dT%H:%M:%S'))
+                # Vaqt zonasini aniq belgilash
+                date = timezone.make_aware(datetime.strptime(date_str, '%Y-%m-%dT%H:%M:%S'), timezone.get_current_timezone())
             except ValueError:
                 return Response({'error': 'Invalid date format'}, status=status.HTTP_400_BAD_REQUEST)
 
             if Bookings.objects.filter(date=date).exists():
                 return Response({'error': 'This time is already booked'}, status=status.HTTP_400_BAD_REQUEST)
+            
 
             booking_instance = serializer.save()
             image_url = self.create_and_save_jpg({
@@ -281,7 +289,10 @@ class CreateBooking(APIView):
         # Format date and time
         formatted_date = format_date_uzbek(data['date'])
         formatted_time = data['date'].strftime('%H:%M')
-        booking_time = timezone.localtime().strftime('%d %B %Y, %H:%M')
+        uzbekistan_tz = pytz.timezone('Asia/Tashkent')
+
+# Hozirgi vaqtni O'zbekiston vaqti bilan olish
+        booking_time = datetime.now(uzbekistan_tz).strftime('%d %B %Y, %H:%M')
 
         # Define text lines
         text_lines = [
