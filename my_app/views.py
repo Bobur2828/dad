@@ -4,8 +4,12 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import generics, permissions
 from rest_framework import generics
-from .models import Header, About, Education, Experience, Certification, Category, Blog, Video, Comment, Contact, Socials,Bookings
-from .serializers import (HeaderSerializer, AboutSerializer, EducationSerializer, ExperienceSerializer,BookingSerializer, CertificationSerializer, CategorySerializer, BlogSerializer, VideoSerializer, CommentSerializer, ContactSerializer, SocialsSerializer)
+from .models import Header, About, Education, Experience, Certification, Category, Blog, Video, Comment, Contact, \
+    Socials, Bookings
+from .serializers import (HeaderSerializer, AboutSerializer, EducationSerializer, ExperienceSerializer,
+                          BookingSerializer, CertificationSerializer, CategorySerializer, BlogSerializer,
+                          VideoSerializer, CommentSerializer, ContactSerializer, SocialsSerializer,
+                          CommentCreateSerializer)
 import requests
 from rest_framework import viewsets
 from rest_framework import status
@@ -19,70 +23,71 @@ import pytz
 
 
 class HeaderView(APIView):
-    def get(self,request):
+    def get(self, request):
         header = Header.objects.all()
         about = About.objects.all()
         education = Education.objects.all()
         experience = Experience.objects.all()
         certification = Certification.objects.all()
-        headerSR=HeaderSerializer(header,many=True,context={'request': request})
-        aboutSR=AboutSerializer(about,many=True,context={'request': request})
-        experienceSR=ExperienceSerializer(experience,many=True,context={'request':request})
-        educationSR=EducationSerializer(education,many=True,context={"request":request})
-        certificationSR=CertificationSerializer(certification,many=True,context={'request': request})
+        headerSR = HeaderSerializer(header, many=True, context={'request': request})
+        aboutSR = AboutSerializer(about, many=True, context={'request': request})
+        experienceSR = ExperienceSerializer(experience, many=True, context={'request': request})
+        educationSR = EducationSerializer(education, many=True, context={"request": request})
+        certificationSR = CertificationSerializer(certification, many=True, context={'request': request})
 
-
-        data={
+        data = {
             'header': headerSR.data,
             'about': aboutSR.data,
             'education': educationSR.data,
             'experience': experienceSR.data,
-            'certification': CertificationSerializer(certification,many=True,context={'request': request}).data
+            'certification': CertificationSerializer(certification, many=True, context={'request': request}).data
         }
 
         response_data = {  # Response obyekti orqali JSON javob qaytarish
             'success': True,  # Operatsiyaning muvaffaqiyatli ekanligini bildiradi
             'message': "Success",  # Muvaffaqiyatli xabar
-            'data':data
+            'data': data
         }
         return Response(response_data)  # JSON javob qaytarish
+
 
 class Service(APIView):
     def get(self, request):
         category_id = request.query_params.get('id', None)
-        
-        if category_id:
-                category = Category.objects.get(id=category_id)
-                serializer = CategorySerializer(category, context={'request': request})
 
-                data = {
-                     'service': serializer.data
-                }
-                response_data = {  # Response obyekti orqali JSON javob qaytarish
-                            'success': True,  # Operatsiyaning muvaffaqiyatli ekanligini bildiradi
-                            'message': "Success",  # Muvaffaqiyatli xabar
-                            'data':data
-                        }
-                return Response(response_data)  # JSON javob qaytarish
+        if category_id:
+            category = Category.objects.get(id=category_id)
+            serializer = CategorySerializer(category, context={'request': request})
+
+            data = {
+                'service': serializer.data
+            }
+            response_data = {  # Response obyekti orqali JSON javob qaytarish
+                'success': True,  # Operatsiyaning muvaffaqiyatli ekanligini bildiradi
+                'message': "Success",  # Muvaffaqiyatli xabar
+                'data': data
+            }
+            return Response(response_data)  # JSON javob qaytarish
 
         else:
             categories = Category.objects.all()
             serializer = CategorySerializer(categories, many=True, context={'request': request})
-        
+
             data = {
-                     'service': serializer.data
-                }
+                'service': serializer.data
+            }
             response_data = {  # Response obyekti orqali JSON javob qaytarish
-                            'success': True,  # Operatsiyaning muvaffaqiyatli ekanligini bildiradi
-                            'message': "Success",  # Muvaffaqiyatli xabar
-                            'data':data
-                        }
+                'success': True,  # Operatsiyaning muvaffaqiyatli ekanligini bildiradi
+                'message': "Success",  # Muvaffaqiyatli xabar
+                'data': data
+            }
             return Response(response_data)  # JSON javob qaytarish
-        
+
+
 class BlogView(APIView):
     def get(self, request):
         blog_id = request.query_params.get('id', None)
-        
+
         if blog_id:
             try:
                 blog = Blog.objects.get(id=blog_id)
@@ -111,20 +116,22 @@ class BlogView(APIView):
                 'data': data
             }
             return Response(response_data)
-          
+
 
 from datetime import datetime, timedelta, time
+
+
 class AvailableTimes(APIView):
     def get(self, request):
         # `date` parametrini olish
         date_param = request.GET.get('date')
         uzbekistan_tz = pytz.timezone('Asia/Tashkent')
 
-# Hozirgi vaqtni O'zbekiston vaqti bilan olish
+        # Hozirgi vaqtni O'zbekiston vaqti bilan olish
         booking_time = datetime.now(uzbekistan_tz).strftime('%d %B %Y, %H:%M')
 
         today = datetime.now(uzbekistan_tz).date()  # Lokal vaqtni olish
-        now = datetime.now(uzbekistan_tz).time()    # Lokal vaqtni olish
+        now = datetime.now(uzbekistan_tz).time()  # Lokal vaqtni olish
 
         # Sanani o'qish yoki bugungi sanani olish
         if date_param:
@@ -142,6 +149,7 @@ class AvailableTimes(APIView):
         # Booked dates from database (only dates with times)
         booked_dates = Bookings.objects.values_list('date', flat=True)
         booked_dates = [datetime.combine(date.date(), date.time()).replace(tzinfo=None) for date in booked_dates]
+
         # print("Booked dates:", booked_dates)  # Debug print
 
         # Function to get available times for a given date
@@ -191,7 +199,7 @@ class AvailableTimes(APIView):
 
     def get_all_possible_dates(self, start_date):
         start_time = time(8, 0)  # 08:00
-        end_time = time(14, 30)   # 15:00
+        end_time = time(14, 30)  # 15:00
         interval = timedelta(minutes=30)
         times = {}
 
@@ -205,6 +213,8 @@ class AvailableTimes(APIView):
                 current_time = (datetime.combine(current_date, current_time) + interval).time()
 
         return times
+
+
 class CreateBooking(APIView):
     def post(self, request):
         serializer = BookingSerializer(data=request.data)
@@ -212,13 +222,13 @@ class CreateBooking(APIView):
             date_str = request.data.get('date')
             try:
                 # Vaqt zonasini aniq belgilash
-                date = timezone.make_aware(datetime.strptime(date_str, '%Y-%m-%dT%H:%M:%S'), timezone.get_current_timezone())
+                date = timezone.make_aware(datetime.strptime(date_str, '%Y-%m-%dT%H:%M:%S'),
+                                           timezone.get_current_timezone())
             except ValueError:
                 return Response({'error': 'Invalid date format'}, status=status.HTTP_400_BAD_REQUEST)
 
             if Bookings.objects.filter(date=date).exists():
                 return Response({'error': 'This time is already booked'}, status=status.HTTP_400_BAD_REQUEST)
-            
 
             booking_instance = serializer.save()
             image_url = self.create_and_save_jpg({
@@ -228,14 +238,14 @@ class CreateBooking(APIView):
             })
 
             return Response({
-                            'success': True,
-                            'message': 'Succes',
-                            'data': {
-                                'message': 'Tabriklaymiz! Siz roʻyxatga muvaffaqiyatli qabul qilindingiz. Marhamat, qabul ruxsatnomasini yuklab oling.',
-                                'image_url': image_url
-                            }
-                        }, status=status.HTTP_201_CREATED)
-        
+                'success': True,
+                'message': 'Succes',
+                'data': {
+                    'message': 'Tabriklaymiz! Siz roʻyxatga muvaffaqiyatli qabul qilindingiz. Marhamat, qabul ruxsatnomasini yuklab oling.',
+                    'image_url': image_url
+                }
+            }, status=status.HTTP_201_CREATED)
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def create_and_save_jpg(self, data):
@@ -274,7 +284,7 @@ class CreateBooking(APIView):
                     line = test_line
             if line:
                 lines.append(line)
-                
+
             x = 50  # Left margin
             for line in lines:
                 text_bbox = draw.textbbox((0, 0), line, font=font)
@@ -287,11 +297,11 @@ class CreateBooking(APIView):
         draw_left_aligned_text(draw, title_text, 500, title_font, image_width)
 
         # Format date and time
-       
+
         formatted_time = data['date'].strftime('%H:%M')
         uzbekistan_tz = pytz.timezone('Asia/Tashkent')
 
-# Hozirgi vaqtni O'zbekiston vaqti bilan olish
+        # Hozirgi vaqtni O'zbekiston vaqti bilan olish
         formatted_date = format_date_uzbek(data['date'])
         booking_time = datetime.now(uzbekistan_tz)
         booking_time1 = datetime.now(uzbekistan_tz).strftime('%H:%M')
@@ -304,13 +314,11 @@ class CreateBooking(APIView):
             "ogohlantirib qoʻying. +998905142233",
             "Unutmang! Siz band qilgan vaqtda boshqa\nbemor qabulga yozilishi ham mumkin edi\n\n\n"
 
-           
-             f"Ro'yxatga olish vaqti:\n "
-             f"\n\n{formatted_booking_time}  {booking_time1}"
+
+            f"Ro'yxatga olish vaqti:\n "
+            f"\n\n{formatted_booking_time}  {booking_time1}"
 
             f"\n\nDoktor Azizjon Davlatovich\n\n\n\n"
-
-           
 
         ]
 
@@ -325,7 +333,7 @@ class CreateBooking(APIView):
 
         # Return the image URL
         image_url = os.path.join(settings.MEDIA_URL, 'book', file_name)
-        
+
         # Schedule image deletion
         delete_after = timedelta(minutes=1)
         delete_time = timezone.now() + delete_after
@@ -345,6 +353,7 @@ class CreateBooking(APIView):
         delay = (delete_time - timezone.now()).total_seconds()
         Timer(delay, delete_image).start()
 
+
 def get_uzbek_month_name(month_number):
     months = {
         1: 'Yanvar',
@@ -362,8 +371,45 @@ def get_uzbek_month_name(month_number):
     }
     return months.get(month_number, '')
 
+
 def format_date_uzbek(date):
     day = date.day
     month = get_uzbek_month_name(date.month)
     year = date.year
     return f"{day} {month} {year}"
+
+
+# -----------------Comment----------------
+class CommentCreate(generics.CreateAPIView):
+    "Izoh yaratish uchun"
+    queryset = Comment.objects.all()
+    serializer_class = CommentCreateSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+
+        response_data = {
+            "success": True,
+            "message": "Created successfully",
+            "data": serializer.data
+        }
+        return Response(response_data, status=status.HTTP_201_CREATED)
+
+
+class CommentList(generics.ListAPIView):
+    serializer_class = CommentSerializer
+
+    def get_queryset(self):
+        return Comment.objects.filter(status=True)
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        response_data = {
+            "success": True,
+            "message": "Success",
+            "data": serializer.data
+        }
+        return Response(response_data, status=status.HTTP_200_OK)

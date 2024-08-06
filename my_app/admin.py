@@ -46,6 +46,7 @@ class CommentAdmin(admin.ModelAdmin):
     list_display = ('name', 'status')
     search_fields = ('name',)
     list_filter = ('status',)
+    list_editable = ['status']
 
 @admin.register(Contact)
 class ContactAdmin(admin.ModelAdmin):
